@@ -21,6 +21,14 @@ SIGNAL_LENGTHS = {'M': 0.2, '1': 0.5, '0': 0.8}
 
 DEBUG=False
 
+class JST(datetime.tzinfo):
+  def utcoffset(self, dt):
+    return datetime.timedelta(hours=9)
+  def dst(self, dt):
+    return datetime.timedelta(0)
+  def tzname(self, dt):
+    return 'JST'
+
 def send_signal(signal):
   for x in range(1,1000,5): 
     pwm.add_channel_pulse(0, IO_PIN, x ,3)
@@ -32,8 +40,9 @@ def send_signal(signal):
 
 def schedule_next (scheduler):
   a = datetime.datetime.now() + datetime.timedelta(minutes=1)
+  a_jpn = datetime.datetime.now(JST()) + datetime.timedelta(minutes=1)
   next0sec = time.mktime(datetime.datetime(a.year, a.month, a.day, a.hour, a.minute, 0, 0).timetuple())
-  ts = a.strftime('%M%H%j%y%w,%H,%M').split(',')
+  ts = a_jpn.strftime('%M%H%j%y%w,%H,%M').split(',')
   data = [int(x) for x in ts[0]]
   parities = ["".join(["{:b}".format(int(x)) for x in ps]).count('1') % 2 for ps in ts[1:]]
   signals = JJY_FORMAT.format(*(data + parities))
